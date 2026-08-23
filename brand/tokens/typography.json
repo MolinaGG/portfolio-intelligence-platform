@@ -1,0 +1,6 @@
+{
+  "heading": { "family": "Manrope", "fallback": "Inter, Arial, sans-serif" },
+  "body": { "family": "Inter", "fallback": "Arial, sans-serif" },
+  "financialData": { "family": "Inter", "fontVariantNumeric": "tabular-nums" }
+}
+
