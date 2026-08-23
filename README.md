@@ -4,7 +4,7 @@
 > **Versão do documento:** 0.5.0  
 > **Data de referência:** 23/08/2026  
 > **Visibilidade pretendida:** repositório privado  
-> **Nome comercial:** `Evidaris` — aprovado pelos fundadores
+> **Nome comercial:** `Evidaris` — Sugestão
 
 Plataforma web para consolidar, acompanhar e explicar investimentos mantidos em diferentes instituições, moedas e classes de ativos. O produto nasce como um beta para o fundador e convidados, mas deve evoluir sem reescrita estrutural para organizações, consultores, clientes e mais de 100 mil usuários.
 
@@ -89,7 +89,6 @@ As corretoras mostram seus próprios produtos e saldos. A plataforma deverá mos
 
 | Dimensão | Direção |
 |---|---|
-| Relação institucional | Marca totalmente independente da FUP Implementações |
 | Abrangência | Nome internacional, abstrato e pronunciável em português e inglês |
 | Significado | Deve possuir uma história coerente, não ser apenas combinação aleatória de letras |
 | Valor emocional | Confiança e segurança |
