@@ -1,0 +1,17 @@
+:root {
+  --evidaris-midnight-950: #071a2b;
+  --evidaris-navy-800: #12314a;
+  --evidaris-teal-500: #00bfa6;
+  --evidaris-amber-500: #ffb000;
+  --evidaris-ivory-50: #f7f4ec;
+  --evidaris-slate-500: #74889a;
+  --evidaris-white: #ffffff;
+  --evidaris-danger-500: #d84a4a;
+  --evidaris-font-heading: "Manrope", "Inter", Arial, sans-serif;
+  --evidaris-font-body: "Inter", Arial, sans-serif;
+}
+
+.financial-data {
+  font-variant-numeric: tabular-nums;
+}
+
