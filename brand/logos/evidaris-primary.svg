@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 160" role="img" aria-labelledby="title desc">
+  <title id="title">Evidaris</title>
+  <desc id="desc">Assinatura horizontal da Evidaris.</desc>
+  <g transform="translate(16 16)">
+    <rect width="128" height="128" rx="28" fill="#071A2B"/>
+    <path d="M29 31h50l18 11-18 11H29z" fill="#00BFA6"/>
+    <path d="M29 54h42l18 10-18 10H29z" fill="#F7F4EC"/>
+    <path d="M29 76h50l18 11-18 11H29z" fill="#00BFA6"/>
+    <path d="M29 31h13v67H29z" fill="#F7F4EC"/>
+    <path d="M99 25l3.3 8.7L111 37l-8.7 3.3L99 49l-3.3-8.7L87 37l8.7-3.3z" fill="#FFB000"/>
+  </g>
+  <text x="174" y="100" fill="#071A2B" font-family="Manrope, Inter, Arial, sans-serif" font-size="72" font-weight="700" letter-spacing="-2">Evidaris</text>
+</svg>
+
