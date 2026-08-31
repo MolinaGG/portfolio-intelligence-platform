@@ -1,14 +1,30 @@
 # Evidaris — Plataforma Global de Inteligência Patrimonial
 
 > **Status:** arquitetura e descoberta do produto  
-> **Versão do documento:** 0.5.0  
-> **Data de referência:** 23/08/2026  
+> **Versão do documento:** 0.6.0  
+> **Data de referência:** 31/08/2026  
 > **Visibilidade pretendida:** repositório privado  
-> **Nome comercial:** `Evidaris` — Sugestão
+> **Nome comercial:** `Evidaris` — aprovado pelos fundadores
 
 Plataforma web para consolidar, acompanhar e explicar investimentos mantidos em diferentes instituições, moedas e classes de ativos. O produto nasce como um beta para o fundador e convidados, mas deve evoluir sem reescrita estrutural para organizações, consultores, clientes e mais de 100 mil usuários.
 
 O sistema não executará ordens nem recomendará investimentos. Seu papel será organizar dados, calcular desempenho e risco, explicar exposições, acompanhar teses definidas pelo próprio usuário e apresentar notícias relevantes com fontes.
+
+### Entrega 0.1 — call de 31/08/2026
+
+Foi aprovado um *thin slice* funcional para transformar a visão arquitetural em um produto demonstrável sem antecipar toda a infraestrutura definitiva:
+
+- dashboard responsivo inspirado no molde aprovado;
+- importação de posição da Área do Investidor B3 em XLSX, XLS ou CSV;
+- normalização de cabeçalhos e valores monetários brasileiros;
+- prevenção de duplicidade por hash SHA-256 do arquivo;
+- persistência do lote, posições normalizadas e evidência original;
+- patrimônio total em BRL e USD com câmbio de referência explicitado;
+- distribuição por classe, instituições e maiores posições;
+- assistente de IA flutuante demonstrativo, ainda sem modelo conectado;
+- arquivo demonstrativo para validar a jornada sem dados reais.
+
+Esta entrega prova o caminho `arquivo B3 → normalização → banco → patrimônio`. Ela ainda não promete histórico transacional completo, TWR, XIRR, conciliação de movimentações, cotações automáticas ou leitura de screenshots.
 
 ---
 
@@ -89,6 +105,7 @@ As corretoras mostram seus próprios produtos e saldos. A plataforma deverá mos
 
 | Dimensão | Direção |
 |---|---|
+| Relação institucional | Marca totalmente independente da FUP Implementações |
 | Abrangência | Nome internacional, abstrato e pronunciável em português e inglês |
 | Significado | Deve possuir uma história coerente, não ser apenas combinação aleatória de letras |
 | Valor emocional | Confiança e segurança |
@@ -619,6 +636,30 @@ Plano com margem negativa não será compensado escondendo o dado do cliente. Aj
 5. Fazer oferta concierge do Plus a uma coorte pequena.
 6. Testar disposição a pagar em faixas, evitando perguntar apenas “quanto pagaria?”.
 
+### Oferta de validação e estratégia de venda
+
+**Promessa do beta fechado:**
+
+> Importe a posição da B3 e enxergue, em poucos minutos, seu patrimônio brasileiro consolidado em real e dólar — com origem do arquivo, prevenção de duplicidade e indicação clara do que ainda não foi reconciliado.
+
+Não fazem parte dessa promessa inicial: sincronização automática, cálculo fiscal, rentabilidade histórica completa, recomendação, cotações em tempo real ou leitura irrestrita de qualquer documento.
+
+**Oferta de entrada:** beta concierge gratuito para 20 investidores das personas prioritárias, limitado a uma importação de posição B3 por participante e uma conversa de 20 minutos. Em troca, mede-se conclusão, precisão percebida, divergências e disposição a retornar.
+
+**Conversão após prova:** plano fundador por `R$ 14,90/mês` durante 12 meses para os primeiros usuários que desejarem reimportação, histórico de snapshots e relatórios; preço é hipótese e só será cobrado após as funções existirem e os termos serem aprovados.
+
+**Sequência de aquisição:**
+
+1. recrutamento manual em comunidades de FIIs, ETFs e investidores multibanco;
+2. demonstração de 45 segundos com arquivo fictício, sem prometer integração inexistente;
+3. CTA único: “importe sua posição da B3”;
+4. onboarding concierge nos primeiros 20 casos;
+5. estudo de caso com tempo economizado e divergência encontrada, mediante autorização;
+6. indicação com uma vaga adicional de beta, sem recompensa financeira na primeira coorte;
+7. teste pago somente após retenção semanal e reimportação recorrente.
+
+**Métricas da primeira coorte:** pelo menos 70% concluem a importação; 95% das linhas de layouts homologados entram sem correção; mediana inferior a 5 minutos até o patrimônio; pelo menos 40% retornam para nova consulta em sete dias; zero divergência silenciosa conhecida.
+
 ## Oportunidade B2B e consultorias
 
 ### Tamanho do canal profissional
@@ -779,6 +820,30 @@ flowchart TD
 - A propriedade dos dados não é transferida ao consultor.
 
 ## Arquitetura
+
+### Arquitetura executável do primeiro MVP
+
+O desenho manual abaixo continua sendo a arquitetura-alvo. Para a primeira demonstração, foi adotado um corte vertical menor e substituível:
+
+```mermaid
+flowchart LR
+    U["Arquivo B3"] --> P["Parser e normalização"]
+    P --> D["Banco relacional"]
+    P --> O["Evidência do arquivo"]
+    D --> A["Agregação BRL e USD"]
+    A --> W["Dashboard Evidaris"]
+```
+
+| Camada | Implementação do thin slice | Evolução prevista |
+|---|---|---|
+| Interface | Next.js/React responsivo | PWA, autenticação e múltiplos workspaces |
+| Ingestão | adaptador B3 determinístico | adaptadores XP/PicPay, staging e OCR |
+| Dados | SQLite/D1 relacional | PostgreSQL no núcleo transacional definitivo |
+| Arquivos | object storage com retenção indicada | política de expurgo, opt-out e armazenamento frio |
+| Câmbio | taxa informada e auditável por lote | fonte oficial automática, versão e horário |
+| IA | janela e sugestões demonstrativas | gateway desacoplado, evidências e Kimi K3 sujeito a benchmark |
+
+O banco do thin slice não substitui o modelo financeiro completo. Ele contém somente `import_batches` e `positions`, suficientes para provar ingestão, idempotência, evidência e consolidação. O ledger de eventos e pernas entra antes de qualquer cálculo histórico ou publicação comercial.
 
 ### Visão lógica
 
@@ -1346,6 +1411,51 @@ Debêntures, CRIs e CRAs elegíveis podem usar PU e taxa indicativa da ANBIMA. A
 
 ## Importação B3, XP e PicPay
 
+### Conclusão sobre a API da B3 em 31/08/2026
+
+A B3 mantém APIs B2B da Área do Investidor para `Posição`, `Movimentação`, `Negociação de Ativos`, `Eventos Provisionados`, `Ofertas Públicas`, autorização e guia de investidores. Os dados de posição e movimentação são disponibilizados até D-1 e dependem de autorização do investidor.
+
+O acesso não é oferecido diretamente a pessoas físicas. Fintechs e outras pessoas jurídicas precisam contratar uma licença. A B3 não publica, nas páginas consultadas, um preço fechado para essa licença: orienta contato comercial pelo telefone `+55 11 2565-5080` e canal de contratação. Portanto, qualquer custo colocado agora seria uma estimativa sem proposta formal.
+
+Decisão do MVP:
+
+1. começar pelo Excel exportado gratuitamente na Área do Investidor;
+2. preservar um contrato canônico de importação independente da origem;
+3. solicitar proposta formal à B3 quando houver empresa contratante, CNPJ, estimativa de usuários e volume;
+4. substituir o adaptador de arquivo pelo adaptador de API sem alterar posição, reconciliação ou dashboard;
+5. separar a API do investidor de Market Data: posição/movimentação e cotações são produtos e contratos diferentes.
+
+| Alternativa | Custo inicial | Automação | Risco/limite | Decisão |
+|---|---:|---:|---|---|
+| Excel/PDF da Área do Investidor B3 | Gratuito para o investidor | Baixa | upload recorrente; layout pode mudar | **MVP aprovado** |
+| APIs B3 Área do Investidor | Sob consulta comercial | Alta | B2B, licença, consentimento e homologação | negociar após validação |
+| Open Finance/agregador autorizado | Sob proposta do fornecedor | Alta | cobertura de investimentos varia por instituição | benchmark pós-MVP |
+| Arquivos XP/PicPay | Gratuito para o cliente | Média | adaptadores por produto e versão | segunda onda |
+| Screenshot/OCR | custo variável de visão/IA | Média | não reconstrói histórico e exige confirmação | onboarding pós-estabilização |
+| Digitação manual | custo de produto baixo | Baixa | fricção e erro humano | contingência |
+
+Fontes oficiais: [APIs da Área do Investidor](https://www.b3.com.br/pt_br/produtos-e-servicos/central-depositaria/canal-com-investidores/integracoes-da-area-do-investidor-apis/), [catálogo B3 for Developers](https://developers.b3.com.br/apis/api-area-do-investidor), [Área do Investidor](https://www.b3.com.br/pt_br/produtos-e-servicos/central-depositaria/canal-com-investidores/area-do-investidor/) e [exportação PDF/CSV do PicPay](https://meajuda.picpay.com/hc/pt-br/articles/4408499088525-Como-baixar-o-extrato-em-PDF).
+
+### Contrato canônico mínimo da posição B3
+
+O arquivo recebido nunca será a tabela de domínio. Cada linha é normalizada para:
+
+| Campo canônico | Obrigatório no thin slice | Origem preferida |
+|---|---:|---|
+| `institution` | não | instituição/custodiante; fallback B3 consolidada |
+| `account` | não | conta; fallback consolidada |
+| `asset_name` | sim, salvo ticker | produto/descrição |
+| `ticker` | não | código de negociação |
+| `asset_class` | sim | tipo de produto ou inferência marcada |
+| `quantity` | não quando há valor explícito | quantidade total/disponível |
+| `unit_price_brl` | não quando há valor explícito | preço de fechamento/atual |
+| `market_value_brl` | sim | valor atualizado ou quantidade × preço |
+| `source_row` | sim | número da linha no arquivo |
+| `confidence` | sim | regra determinística de completude |
+| `raw_json` | sim | linha original serializada para auditoria |
+
+Cabeçalhos são comparados sem acentos, pontuação ou diferença de caixa. Linhas sem ativo identificável ou valor positivo são rejeitadas e contadas; não são completadas por suposição.
+
 ### Estratégia de fontes estruturadas
 
 O objetivo é minimizar preenchimento. A primeira tentativa sempre utilizará o formato mais estruturado disponível; IA não será usada para substituir um parser determinístico quando CSV, Excel ou layout conhecido resolverem o problema.
@@ -1729,6 +1839,8 @@ As decisões serão detalhadas em `docs/adr/`.
 | ADR-025 | Corte analítico inicial às 18h00 de Brasília com `as_of` por mercado | Proposta |
 | ADR-026 | Quatro personas B2C nichadas para descoberta e recrutamento | Proposta |
 | ADR-027 | Evidaris como marca independente, internacional e orientada à confiança | Aceita |
+| ADR-028 | Thin slice com arquivo B3, banco relacional e dashboard antes do ledger completo | Aceita |
+| ADR-029 | Excel B3 como fonte inicial; API B3 somente após proposta comercial e validação | Aceita |
 
 ## Questões em aberto
 
