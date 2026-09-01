@@ -23,6 +23,7 @@ export async function requireUserContext(request: Request): Promise<UserContext>
     await db.insert(authIdentities).values({ userId: user.id, provider: source.provider, providerSubject: source.subject, emailVerifiedAt: new Date().toISOString() });
   }
   let member = (await db.select().from(workspaceMembers).where(and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.status, "ACTIVE"))).limit(1))[0];
+  let provisioned = false;
   if (!member) {
     const anyMember = (await db.select().from(workspaceMembers).limit(1))[0];
     let workspaceId: number;
@@ -37,8 +38,10 @@ export async function requireUserContext(request: Request): Promise<UserContext>
       { workspaceId, dimension: "INSTITUTION", thresholdPercent: 50 }, { workspaceId, dimension: "CURRENCY", thresholdPercent: 70 },
       { workspaceId, dimension: "ISSUER", thresholdPercent: 25 },
     ]).onConflictDoNothing();
+    provisioned = true;
   }
   await db.update(users).set({ lastLoginAt: new Date().toISOString(), updatedAt: new Date().toISOString() }).where(eq(users.id, user.id));
+  if (provisioned) await db.insert(auditLogs).values({ workspaceId: member.workspaceId, userId: user.id, action: "WORKSPACE_PROVISIONED", entityType: "WORKSPACE", entityId: String(member.workspaceId), metadataJson: JSON.stringify({ provider: source.provider }) });
   return { userId: user.id, workspaceId: member.workspaceId, email: user.email, displayName: user.displayName, role: member.role };
 }
 

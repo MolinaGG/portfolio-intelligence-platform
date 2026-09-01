@@ -1,10 +1,13 @@
 import { getDb } from "@/db";
 import { investmentTheses } from "@/db/schema";
 import { audit, requireUserContext } from "@/lib/session";
+import { assertRequestSize, enforceRateLimit, ratePolicies } from "@/lib/security";
 
 export async function POST(request: Request) {
   try {
     const context = await requireUserContext(request);
+    await enforceRateLimit(request, context, ratePolicies.write);
+    assertRequestSize(request, 64 * 1024);
     const body = await request.json() as Record<string, unknown>;
     const required = ["assetName","objective","horizon","buyReason","increaseCriteria","reduceCriteria","exitCriteria","mainRisk"];
     if (required.some(key => !String(body[key] || "").trim())) return Response.json({ error: "Preencha todos os campos da tese." }, { status: 400 });

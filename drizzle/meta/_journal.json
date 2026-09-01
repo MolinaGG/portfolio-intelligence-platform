@@ -15,6 +15,13 @@
       "when": 1788254400000,
       "tag": "0001_production_mvp",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788267600000,
+      "tag": "0002_security_controls",
+      "breakpoints": true
     }
   ]
 }

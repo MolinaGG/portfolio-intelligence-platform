@@ -1,0 +1,5 @@
+Produto;Código de Negociação;Tipo de Produto;Instituição;Conta;Quantidade;Preço de Fechamento;Valor Atualizado
+Petrobras PN;PETR4;Ações;XP Investimentos;CONTA-DEMO-01;120;38,45;4614,00
+Vanguard S&P 500 BDR;IVVB11;ETFs;BTG Pactual;CONTA-DEMO-02;42;366,70;15401,40
+FII Kinea Rendimentos;KNCR11;Fundo Imobiliário;XP Investimentos;CONTA-DEMO-01;85;103,25;8776,25
+Tesouro IPCA+ 2035;;Tesouro Direto;Tesouro Direto;CONTA-DEMO-TD;1;5248,90;5248,90

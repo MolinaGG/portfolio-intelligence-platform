@@ -1,7 +1,7 @@
 # Evidaris — Plataforma Global de Inteligência Patrimonial
 
 > **Status:** MVP de produção controlada em implementação
-> **Versão do documento:** 0.7.0
+> **Versão do documento:** 0.8.0
 > **Data de referência:** 01/09/2026
 > **Visibilidade pretendida:** repositório privado  
 > **Nome comercial:** `Evidaris` — aprovado pelos fundadores
@@ -47,7 +47,37 @@ O segundo corte expande o thin slice para todas as áreas visíveis do produto e
 
 O acesso da primeira produção permanece protegido pela identidade nativa do hosting. O banco não armazena senha. O magic link via Clerk foi escolhido para o produto independente, mas sua ativação depende da criação da conta, domínio e chaves de produção; a troca não altera os IDs internos, workspaces ou dados financeiros.
 
-**Produção controlada não significa lançamento público irrestrito.** Antes de abertura ampla ainda são necessários termos, política de privacidade, canal do titular, encarregado/contato de privacidade, revisão jurídica, monitoramento, backups testados, rate limits e credenciais definitivas dos fornecedores.
+**Produção controlada não significa lançamento público irrestrito.** Antes de abertura ampla ainda são necessários versões jurídicas vigentes e revisadas, canal do titular, identificação do controlador/encarregado aplicável, monitoramento externo, backups testados e credenciais definitivas dos fornecedores.
+
+### Entrega 0.3 — documentação e segurança de 01/09/2026
+
+Após a homologação do fundador, o MVP recebeu preparação para colaboração e beta controlado:
+
+- PTAX redundante: série SGS oficial, Olinda, cache e contingência manual;
+- notícias atuais da B3 e CVM com timeout, atribuição e erro visível;
+- rate limiting persistente em D1 por usuário, rota, método e janela;
+- auditoria adicional de provisionamento e bloqueios por excesso;
+- limite de 10 MB, allowlist de formato e higienização do nome no storage;
+- proteção contra CSV Formula Injection nos relatórios;
+- Dependabot, CI e comandos de auditoria de dependências;
+- dependências corrigidas até `npm audit --omit=dev` retornar zero vulnerabilidades conhecidas em 01/09/2026;
+- documentação organizada em `docs/`, dados artificiais em `demo/` e orientação de contribuição;
+- guia de uso, FAQ, mapa das telas e checklist de lançamento;
+- minutas de Termos, Privacidade, direitos dos titulares, retenção e inventário de tratamento.
+
+As minutas jurídicas não estão vigentes. Identificação do controlador, domínio, contatos, fornecedores, bases legais e prazos definitivos ainda exigem preenchimento e revisão jurídica.
+
+### Como encontrar a demonstração e os guias
+
+| Objetivo | Local |
+|---|---|
+| testar cada tela | [`docs/product/demo-screens.md`](docs/product/demo-screens.md) |
+| aprender a usar | [`docs/user-guide.md`](docs/user-guide.md) |
+| consultar dúvidas | [`docs/faq.md`](docs/faq.md) |
+| desenvolver localmente | [`docs/development/getting-started.md`](docs/development/getting-started.md) |
+| revisar segurança | [`docs/security/security-controls.md`](docs/security/security-controls.md) |
+| preparar o lançamento | [`docs/operations/release-checklist.md`](docs/operations/release-checklist.md) |
+| revisar LGPD e termos | [`docs/legal/README.md`](docs/legal/README.md) |
 
 ---
 
@@ -1744,6 +1774,19 @@ Critérios de aprovação:
 - exportação e exclusão;
 - resposta a incidentes.
 
+### Controles executáveis no MVP 0.8
+
+- limites distintos para leitura, PTAX, notícias, importação, rollback, relatórios e escritas;
+- contador persistente no D1 e resposta `429` com `Retry-After`;
+- primeiro excesso de cada janela registrado em auditoria;
+- importações restritas a XLSX/XLS/CSV e 10 MB;
+- nome do arquivo higienizado antes de compor a chave do R2;
+- proteção de células perigosas na exportação CSV;
+- CI, Dependabot e audit de dependências;
+- runbook de incidente e checklist de go/no-go em `docs/`.
+
+MFA, headers do domínio definitivo, limpeza automática do R2/D1, restauração testada e observabilidade externa permanecem gates do beta com convidados.
+
 ### MFA sugerido
 
 - obrigatório para administradores e consultores;
@@ -1870,7 +1913,12 @@ As decisões serão detalhadas em `docs/adr/`.
 | ADR-032 | Hosting Auth na produção controlada e Clerk magic link após chaves/domínio | Aceita |
 | ADR-033 | Snapshots patrimoniais não serão apresentados como rentabilidade | Aceita |
 | ADR-034 | PDF/CSV por download agora; Resend atrás de porta quando houver domínio | Aceita |
-| ADR-035 | Notícias com adaptador GNews e fallback RSS, sempre com atribuição e link | Aceita |
+| ADR-035 | Notícias com adaptador GNews opcional e fontes oficiais B3/CVM, sempre com atribuição e link | Substituída pela ADR-037 |
+| ADR-036 | Série SGS do BCB como PTAX primária; Olinda, cache e manual como contingências | Aceita |
+| ADR-037 | Notícias oficiais B3/CVM como fallback sem chave; GNews somente após contrato/chave | Aceita |
+| ADR-038 | Rate limiting persistente no D1 para o beta controlado | Aceita |
+| ADR-039 | `docs/` como índice operacional e `demo/` somente com dados artificiais | Aceita |
+| ADR-040 | Minutas jurídicas versionadas no repositório, mas não vigentes sem revisão e campos completos | Aceita |
 
 ## Questões em aberto
 
@@ -1924,8 +1972,8 @@ As decisões serão detalhadas em `docs/adr/`.
 ### Regulação
 
 - [ ] Parecer jurídico sobre fronteira entre análise, educação e consultoria.
-- [ ] Mapeamento LGPD e bases legais.
-- [ ] Termos de uso e política de privacidade.
+- [x] Inventário inicial de tratamento e bases legais propostas; revisão jurídica pendente.
+- [x] Minutas de termos, privacidade, direitos e retenção; publicação vigente pendente.
 - [ ] Revisão de licenças de mercado/notícias antes do público geral.
 
 ## Fontes e referências

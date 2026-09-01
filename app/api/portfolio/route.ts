@@ -6,6 +6,7 @@ import { concentrationRules, importBatches, incomes, investmentTheses, portfolio
 import { normalizeB3Rows, sha256, type RawRow } from "@/lib/b3-import";
 import { fetchLatestPtax } from "@/lib/ptax";
 import { audit, requireUserContext, type UserContext } from "@/lib/session";
+import { assertRequestSize, enforceRateLimit, ratePolicies, safeStorageName } from "@/lib/security";
 
 async function summary(context: UserContext, selectedBatchId?: number) {
   const db = getDb();
@@ -37,16 +38,20 @@ async function summary(context: UserContext, selectedBatchId?: number) {
 }
 
 export async function GET(request: Request) {
-  try { const context = await requireUserContext(request); return Response.json(await summary(context)); }
+  try { const context = await requireUserContext(request); await enforceRateLimit(request, context, ratePolicies.readPortfolio); return Response.json(await summary(context)); }
   catch (error) { if (error instanceof Response) return error; return Response.json({ error: error instanceof Error ? error.message : "Falha ao consultar patrimônio" }, { status: 500 }); }
 }
 
 export async function POST(request: Request) {
   try {
     const context = await requireUserContext(request);
+    await enforceRateLimit(request, context, ratePolicies.importPortfolio);
+    assertRequestSize(request, 12 * 1_048_576);
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return Response.json({ error: "Selecione um arquivo da B3." }, { status: 400 });
+    if (file.size > 10 * 1_048_576) return Response.json({ error: "O arquivo deve ter no máximo 10 MB." }, { status: 413 });
+    if (!/\.(xlsx|xls|csv)$/i.test(file.name)) return Response.json({ error: "Formato não permitido. Envie XLSX, XLS ou CSV exportado pela B3." }, { status: 415 });
     const buffer = await file.arrayBuffer();
     const contentHash = await sha256(buffer);
     const db = getDb();
@@ -69,7 +74,7 @@ export async function POST(request: Request) {
     }
     if (!Number.isFinite(fxRate) || fxRate <= 0) return Response.json({ error: "Não foi possível obter o câmbio. Informe uma taxa de contingência." }, { status: 400 });
     const retainUntil = new Date(); retainUntil.setUTCMonth(retainUntil.getUTCMonth() + 3);
-    const storageKey = `workspaces/${context.workspaceId}/imports/b3/${contentHash}/${file.name}`;
+    const storageKey = `workspaces/${context.workspaceId}/imports/b3/${contentHash}/${safeStorageName(file.name)}`;
     if (env.BUCKET) await env.BUCKET.put(storageKey, buffer, { httpMetadata: { contentType: file.type || "application/octet-stream" } });
     if (existing) await db.update(importBatches).set({ status: "COMPLETED", rolledBackAt: null }).where(eq(importBatches.id, existing.id));
     const batch = existing ?? (await db.insert(importBatches).values({
@@ -90,6 +95,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const context = await requireUserContext(request);
+    await enforceRateLimit(request, context, ratePolicies.rollbackImport);
     const id = Number(new URL(request.url).searchParams.get("id"));
     if (!Number.isInteger(id)) return Response.json({ error: "Lote inválido" }, { status: 400 });
     const db = getDb();

@@ -1,20 +1,11 @@
 import { requireUserContext } from "@/lib/session";
-
-type NewsItem = { title: string; url: string; source: string; publishedAt: string; category: string };
-const decode = (value: string) => value.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-
-function parseRss(xml: string, category: string): NewsItem[] {
-  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 8).map(match => {
-    const item = match[1];
-    const read = (tag: string) => decode(item.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`))?.[1]?.trim() || "");
-    const source = read("source") || "Mercado financeiro";
-    return { title: read("title").replace(new RegExp(` - ${source}$`), ""), url: read("link"), source, publishedAt: new Date(read("pubDate") || Date.now()).toISOString(), category };
-  }).filter(item => item.title && item.url);
-}
+import { fetchText, parseB3News, parseCvmNews } from "@/lib/news";
+import { enforceRateLimit, ratePolicies } from "@/lib/security";
 
 export async function GET(request: Request) {
   try {
-    await requireUserContext(request);
+    const context = await requireUserContext(request);
+    await enforceRateLimit(request, context, ratePolicies.news);
     const apiKey = process.env.GNEWS_API_KEY;
     if (apiKey) {
       const endpoint = new URL("https://gnews.io/api/v4/search");
@@ -25,15 +16,18 @@ export async function GET(request: Request) {
         return Response.json({ provider: "GNews", items: (payload.articles || []).map(article => ({ title: article.title, url: article.url, publishedAt: article.publishedAt, source: article.source?.name || "GNews", category: "Mercado" })) });
       }
     }
-    const feeds = [
-      ["https://news.google.com/rss/search?q=mercado+financeiro+investimentos+Brasil&hl=pt-BR&gl=BR&ceid=BR:pt-419", "Mercado"],
-      ["https://news.google.com/rss/search?q=(site%3Ab3.com.br+OR+site%3Abcb.gov.br+OR+site%3Agov.br%2Fcvm)+investimentos&hl=pt-BR&gl=BR&ceid=BR:pt-419", "Fontes oficiais"],
-      ["https://news.google.com/rss/search?q=Wall+Street+Federal+Reserve+ETFs&hl=pt-BR&gl=BR&ceid=BR:pt-419", "Global"],
-    ] as const;
-    const responses = await Promise.all(feeds.map(async ([url, category]) => {
-      const response = await fetch(url, { headers: { "User-Agent": "Evidaris/0.2 (+financial-news-reader)" }, cf: { cacheTtl: 900, cacheEverything: true } } as RequestInit);
-      return response.ok ? parseRss(await response.text(), category) : [];
-    }));
-    return Response.json({ provider: "Google News RSS", items: responses.flat().sort((a,b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 16) }, { headers: { "Cache-Control": "private, max-age=600" } });
-  } catch (error) { if (error instanceof Response) return error; return Response.json({ provider: "unavailable", items: [], error: "Notícias temporariamente indisponíveis" }, { status: 503 }); }
+    const sources = await Promise.allSettled([
+      fetchText("https://www.b3.com.br/pt_br/noticias/").then(parseB3News),
+      fetchText("https://www.gov.br/cvm/pt-br/assuntos/noticias").then(parseCvmNews),
+    ]);
+    const items = sources.flatMap(result => result.status === "fulfilled" ? result.value : [])
+      .filter((item, index, all) => all.findIndex(other => other.url === item.url) === index)
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)).slice(0, 16);
+    if (!items.length) throw new Error(sources.map(result => result.status === "rejected" ? String(result.reason) : "fonte vazia").join("; "));
+    return Response.json({ provider: "B3 + CVM", items }, { headers: { "Cache-Control": "private, max-age=600" } });
+  } catch (error) {
+    if (error instanceof Response) return error;
+    console.error("NEWS_PROVIDER_FAILURE", error instanceof Error ? error.message : "unknown");
+    return Response.json({ provider: "Indisponível", items: [], error: "As fontes de notícias não responderam. Tente novamente em instantes." });
+  }
 }

@@ -38,6 +38,13 @@ export const auditLogs = sqliteTable("audit_logs", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, t => [index("idx_audit_workspace_created").on(t.workspaceId, t.createdAt)]);
 
+export const rateLimitCounters = sqliteTable("rate_limit_counters", {
+  id: integer("id").primaryKey({ autoIncrement: true }), keyHash: text("key_hash").notNull(),
+  route: text("route").notNull(), windowStart: integer("window_start").notNull(),
+  windowSeconds: integer("window_seconds").notNull(), count: integer("count").notNull().default(1),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, t => [uniqueIndex("uq_rate_limit_key_window").on(t.keyHash, t.windowStart), index("idx_rate_limit_window").on(t.windowStart)]);
+
 export const portfolios = sqliteTable("portfolios", {
   id: integer("id").primaryKey({ autoIncrement: true }), workspaceId: integer("workspace_id").notNull().references(() => workspaces.id),
   name: text("name").notNull().default("Carteira principal"), baseCurrency: text("base_currency").notNull().default("BRL"),

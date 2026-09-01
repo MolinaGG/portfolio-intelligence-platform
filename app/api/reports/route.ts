@@ -3,11 +3,17 @@ import { getDb } from "@/db";
 import { importBatches, positions, reportDeliveries } from "@/db/schema";
 import { portfolioPdf } from "@/lib/pdf-report";
 import { audit, requireUserContext } from "@/lib/session";
+import { enforceRateLimit, ratePolicies } from "@/lib/security";
 
-const csvCell = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+const csvCell = (value: unknown) => {
+  const raw = String(value ?? "");
+  const safe = /^[=+\-@]/.test(raw.trimStart()) ? `'${raw}` : raw;
+  return `"${safe.replace(/"/g, '""')}"`;
+};
 export async function GET(request: Request) {
   try {
     const context = await requireUserContext(request);
+    await enforceRateLimit(request, context, ratePolicies.report);
     const format = new URL(request.url).searchParams.get("format") === "csv" ? "csv" : "pdf";
     const db = getDb();
     const batch = (await db.select().from(importBatches).where(and(eq(importBatches.workspaceId, context.workspaceId), eq(importBatches.status, "COMPLETED"))).orderBy(desc(importBatches.id)).limit(1))[0];

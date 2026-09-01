@@ -43,8 +43,26 @@ test("keeps return claims honest until cashflows exist", async () => {
 
 test("documents controlled production and provider gates", async () => {
   const readme = await readFile(new URL("../README.md", import.meta.url), "utf8");
-  assert.match(readme, /Versão do documento:\*\* 0\.7\.0/);
+  assert.match(readme, /Versão do documento:\*\* 0\.8\.0/);
   assert.match(readme, /Produção controlada não significa lançamento público irrestrito/);
   assert.match(readme, /Clerk magic link/);
   assert.match(readme, /Resend/);
+});
+
+test("applies persistent rate limits and safe upload boundaries", async () => {
+  const security = await readFile(new URL("../lib/security.ts", import.meta.url), "utf8");
+  const portfolio = await readFile(new URL("../app/api/portfolio/route.ts", import.meta.url), "utf8");
+  const schema = await readFile(new URL("../db/schema.ts", import.meta.url), "utf8");
+  assert.match(security, /RATE_LIMIT_EXCEEDED/);
+  assert.match(security, /Retry-After/);
+  assert.match(schema, /rateLimitCounters/);
+  assert.match(portfolio, /10 \* 1_048_576/);
+  assert.match(portfolio, /safeStorageName/);
+});
+
+test("ships discoverable user, demo, legal and security guides", async () => {
+  for (const path of ["../docs/README.md", "../docs/user-guide.md", "../docs/faq.md", "../docs/product/demo-screens.md", "../docs/legal/privacy-policy.md", "../docs/legal/terms-of-use.md", "../SECURITY.md"]) {
+    const contents = await readFile(new URL(path, import.meta.url), "utf8");
+    assert.ok(contents.length > 300, `${path} is unexpectedly small`);
+  }
 });
