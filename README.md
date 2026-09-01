@@ -1,8 +1,8 @@
 # Evidaris — Plataforma Global de Inteligência Patrimonial
 
-> **Status:** arquitetura e descoberta do produto  
-> **Versão do documento:** 0.6.0  
-> **Data de referência:** 31/08/2026  
+> **Status:** MVP de produção controlada em implementação
+> **Versão do documento:** 0.7.0
+> **Data de referência:** 01/09/2026
 > **Visibilidade pretendida:** repositório privado  
 > **Nome comercial:** `Evidaris` — aprovado pelos fundadores
 
@@ -25,6 +25,29 @@ Foi aprovado um *thin slice* funcional para transformar a visão arquitetural em
 - arquivo demonstrativo para validar a jornada sem dados reais.
 
 Esta entrega prova o caminho `arquivo B3 → normalização → banco → patrimônio`. Ela ainda não promete histórico transacional completo, TWR, XIRR, conciliação de movimentações, cotações automáticas ou leitura de screenshots.
+
+### Entrega 0.2 — produção controlada de 01/09/2026
+
+O segundo corte expande o thin slice para todas as áreas visíveis do produto e introduz isolamento multiusuário:
+
+- tela de entrada da Evidaris e identidade externa desacoplada do usuário de negócio;
+- usuários, identidades, workspaces, membros, consentimentos e auditoria;
+- isolamento de importações e posições por `workspace_id`;
+- PTAX de venda automática do Banco Central, com data, fonte e substituição manual auditada;
+- detalhes da carteira e drill-down por ativo;
+- histórico de importações e rollback com impacto estimado;
+- snapshots patrimoniais, sem apresentar variação de patrimônio como TWR ou XIRR;
+- rendimentos cadastrados manualmente e estrutura preparada para movimentações B3;
+- alertas iniciais de concentração por ativo, classe, instituição, moeda e emissor;
+- diário de tese com critérios de aumento, redução e saída;
+- relatório patrimonial em PDF e CSV;
+- registro de geração e arquitetura de entrega preparada para Resend;
+- notícias do Brasil e do exterior com fonte, horário e link original;
+- preferências de moeda-base e modo de câmbio.
+
+O acesso da primeira produção permanece protegido pela identidade nativa do hosting. O banco não armazena senha. O magic link via Clerk foi escolhido para o produto independente, mas sua ativação depende da criação da conta, domínio e chaves de produção; a troca não altera os IDs internos, workspaces ou dados financeiros.
+
+**Produção controlada não significa lançamento público irrestrito.** Antes de abertura ampla ainda são necessários termos, política de privacidade, canal do titular, encarregado/contato de privacidade, revisão jurídica, monitoramento, backups testados, rate limits e credenciais definitivas dos fornecedores.
 
 ---
 
@@ -836,14 +859,14 @@ flowchart LR
 
 | Camada | Implementação do thin slice | Evolução prevista |
 |---|---|---|
-| Interface | Next.js/React responsivo | PWA, autenticação e múltiplos workspaces |
+| Interface | Next.js/React responsivo com dez áreas funcionais | PWA e personalização |
 | Ingestão | adaptador B3 determinístico | adaptadores XP/PicPay, staging e OCR |
 | Dados | SQLite/D1 relacional | PostgreSQL no núcleo transacional definitivo |
 | Arquivos | object storage com retenção indicada | política de expurgo, opt-out e armazenamento frio |
-| Câmbio | taxa informada e auditável por lote | fonte oficial automática, versão e horário |
+| Câmbio | PTAX de venda automática, fallback e override auditado | histórico por ativo e moedas adicionais |
 | IA | janela e sugestões demonstrativas | gateway desacoplado, evidências e Kimi K3 sujeito a benchmark |
 
-O banco do thin slice não substitui o modelo financeiro completo. Ele contém somente `import_batches` e `positions`, suficientes para provar ingestão, idempotência, evidência e consolidação. O ledger de eventos e pernas entra antes de qualquer cálculo histórico ou publicação comercial.
+O banco executável continua menor que o modelo financeiro completo, mas agora contém identidade interna, workspaces, consentimentos, auditoria, preferências, importações, posições, snapshots, rendimentos, teses, regras de concentração, câmbio e entregas de relatório. O ledger de eventos e pernas continua obrigatório antes de publicar TWR, XIRR ou histórico financeiro como definitivo.
 
 ### Visão lógica
 
@@ -896,9 +919,10 @@ Extrações futuras devem ser motivadas por volume, confiabilidade, custo ou ind
 | Modelo de IA candidato | Kimi K3 via interface desacoplada | Classificação, extração assistida e explicações; sujeito a benchmark e avaliação de fornecedor |
 | Banco principal | PostgreSQL | Fonte transacional e analítica inicial |
 | Cache | Redis/Upstash | Cache, rate limit, locks e estado temporário |
-| Identidade inicial | Supabase Auth | Login, sessão, recuperação e TOTP |
-| Arquivos iniciais | Supabase Storage | Extratos e documentos importados |
-| Execução | Google Cloud Run | Containers com escala para zero |
+| Identidade da produção controlada | Hosting Auth, substituível | Proteção imediata sem armazenar senhas |
+| Identidade do produto independente | Clerk magic link, após configuração | Login sem senha, sessão, recuperação e MFA |
+| Banco/arquivos executáveis | Cloudflare D1 e R2 | Dados relacionais e evidências por workspace |
+| Execução do MVP | Cloudflare Workers/Sites | Aplicação full-stack e publicação versionada |
 | CI/CD | GitHub Actions | Testes, build, segurança e deploy |
 | Observabilidade | OpenTelemetry + métricas/logs | Traces, saúde, alertas e diagnóstico |
 
@@ -908,7 +932,7 @@ O identificador de autenticação não será a chave primária do usuário de ne
 
 ```text
 user.id                    = UUID interno
-user_identity.provider     = SUPABASE
+user_identity.provider     = CHATGPT_SITES | CLERK
 user_identity.external_id  = identificador externo
 ```
 
@@ -1841,6 +1865,12 @@ As decisões serão detalhadas em `docs/adr/`.
 | ADR-027 | Evidaris como marca independente, internacional e orientada à confiança | Aceita |
 | ADR-028 | Thin slice com arquivo B3, banco relacional e dashboard antes do ledger completo | Aceita |
 | ADR-029 | Excel B3 como fonte inicial; API B3 somente após proposta comercial e validação | Aceita |
+| ADR-030 | PTAX de venda do BCB como câmbio padrão, com override auditado | Aceita |
+| ADR-031 | Identidade externa desacoplada e nenhuma senha no banco de domínio | Aceita |
+| ADR-032 | Hosting Auth na produção controlada e Clerk magic link após chaves/domínio | Aceita |
+| ADR-033 | Snapshots patrimoniais não serão apresentados como rentabilidade | Aceita |
+| ADR-034 | PDF/CSV por download agora; Resend atrás de porta quando houver domínio | Aceita |
+| ADR-035 | Notícias com adaptador GNews e fallback RSS, sempre com atribuição e link | Aceita |
 
 ## Questões em aberto
 
