@@ -10,6 +10,7 @@ Este diretório é o ponto de entrada para produto, demonstração, operação, 
 | preparar o ambiente local | [Guia de desenvolvimento](development/getting-started.md) |
 | entender a arquitetura | [Arquitetura do MVP](development/architecture.md) |
 | fazer uma publicação | [Checklist de lançamento](operations/release-checklist.md) |
+| conferir a implantação v0.8 | [Registro da implantação](operations/deployment-2026-09-01.md) |
 | operar alertas e disponibilidade | [Observabilidade](operations/observability.md) |
 | entender os controles de segurança | [Segurança do MVP](security/security-controls.md) |
 | responder a um incidente | [Resposta a incidentes](security/incident-response.md) |
