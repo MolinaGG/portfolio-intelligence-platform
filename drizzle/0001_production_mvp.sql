@@ -13,13 +13,13 @@ CREATE TABLE audit_logs (id integer PRIMARY KEY AUTOINCREMENT NOT NULL,workspace
 CREATE INDEX idx_audit_workspace_created ON audit_logs(workspace_id,created_at);
 CREATE TABLE portfolios (id integer PRIMARY KEY AUTOINCREMENT NOT NULL,workspace_id integer NOT NULL REFERENCES workspaces(id),name text DEFAULT 'Carteira principal' NOT NULL,base_currency text DEFAULT 'BRL' NOT NULL,status text DEFAULT 'ACTIVE' NOT NULL,created_at text DEFAULT CURRENT_TIMESTAMP NOT NULL,updated_at text DEFAULT CURRENT_TIMESTAMP NOT NULL);
 DROP INDEX IF EXISTS uq_import_batches_content_hash;
-ALTER TABLE import_batches ADD COLUMN workspace_id integer NOT NULL DEFAULT 1 REFERENCES workspaces(id);
+ALTER TABLE import_batches ADD COLUMN workspace_id integer NOT NULL DEFAULT 1;
 ALTER TABLE import_batches ADD COLUMN fx_source text NOT NULL DEFAULT 'MANUAL';
 ALTER TABLE import_batches ADD COLUMN fx_reference_date text;
 ALTER TABLE import_batches ADD COLUMN rolled_back_at text;
 CREATE UNIQUE INDEX uq_import_batches_workspace_hash ON import_batches(workspace_id,content_hash);
 CREATE INDEX idx_import_batches_workspace_created ON import_batches(workspace_id,created_at);
-ALTER TABLE positions ADD COLUMN workspace_id integer NOT NULL DEFAULT 1 REFERENCES workspaces(id);
+ALTER TABLE positions ADD COLUMN workspace_id integer NOT NULL DEFAULT 1;
 ALTER TABLE positions ADD COLUMN currency text NOT NULL DEFAULT 'BRL';
 CREATE INDEX idx_positions_workspace_batch ON positions(workspace_id,import_batch_id);
 CREATE TABLE portfolio_snapshots (id integer PRIMARY KEY AUTOINCREMENT NOT NULL,workspace_id integer NOT NULL REFERENCES workspaces(id),import_batch_id integer REFERENCES import_batches(id),as_of text NOT NULL,total_brl real NOT NULL,total_usd real NOT NULL,fx_usd_brl real NOT NULL,quality text DEFAULT 'CURRENT_POSITION_ONLY' NOT NULL,created_at text DEFAULT CURRENT_TIMESTAMP NOT NULL);
